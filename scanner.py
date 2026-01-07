@@ -3,12 +3,12 @@ import webbrowser
 import time
 
 class QRScanner:
-    def __init__(self):
+    def __init__(self):  # Initialize the QR code scanner
         self.cap = cv2.VideoCapture(0)
         self.detected = False
         self.qr_detector = cv2.QRCodeDetector()
 
-    def start(self):
+    def start(self):  # Start scanning
         while True:
             ret, frame = self.cap.read()
             if not ret:
@@ -39,7 +39,7 @@ class QRScanner:
                     cv2.imshow("QR Scanner", frame)
                     cv2.waitKey(100)
 
-                    # ---------- ANIMATION (expanding polygon) ----------
+                    # Animation effect
                     for i in range(10):
                         temp = frame.copy()
                         expanded = bbox.copy()
@@ -48,17 +48,16 @@ class QRScanner:
                         cv2.polylines(temp, [expanded], True, (0, 255, 0), 2)
                         cv2.imshow("QR Scanner", temp)
                         cv2.waitKey(40)
-                    # --------------------------------------------------
-
+                    
                 # Boot up browser
                 webbrowser.open(data)
 
-                self.cap.release()
+                self.cap.release()  # Release the camera
                 cv2.destroyAllWindows()
                 return data
 
-            cv2.imshow("QR Scanner", frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            cv2.imshow("QR Scanner", frame) # Show the camera
+            if cv2.waitKey(1) & 0xFF == ord('q'):  # Quit
                 break
 
         self.cap.release()
