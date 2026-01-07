@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Display Query Parameters</title>
+  <style>
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:32px;background:#f7f8fb;color:#111}
+    .card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 6px 18px rgba(20,20,40,0.06);max-width:820px;margin:0 auto}
+    h1{margin:0 0 12px;font-size:20px}
+    p.lead{margin:0 0 20px;color:#444}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #eee}
+    th{background:#fafafa;font-weight:600;color:#333}
+    .no-data{padding:14px;background:#fff6f0;border:1px solid #ffe0c7;border-radius:8px;color:#7a4a1b}
+    .controls{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+    button{padding:8px 12px;border-radius:8px;border:1px solid #e6e9ef;background:#fff;cursor:pointer}
+    button.primary{background:#0b63ff;color:#fff;border-color:transparent}
+    pre{background:#0f1724;color:#e6eef8;padding:12px;border-radius:8px;overflow:auto}
+    .small{font-size:13px;color:#666;margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Redirected: Query Parameters</h1>
+    <p class="lead">This page displays the query parameters from the redirected URL.</p>
+
+    <div id="content"></div>
+
+    <div class="controls" id="controls" style="display:none">
+      <button id="copyJson">Copy as JSON</button>
+      <button id="openRaw" class="primary">Open Raw URL</button>
+    </div>
+
+    <div class="small" style="margin-top:18px">
+      To test: <code>http://localhost:8000/display.html?patientId=pat1002&hospitalId=cws25</code>
+      <br/>(If you open the file with file:// the query string may not be available — use a simple local server.)
+    </div>
+  </div>
+
+  <script>
+    function renderParams(paramsObj, rawSearch) {
+      const content = document.getElementById('content');
+      const controls = document.getElementById('controls');
+
+      const keys = Object.keys(paramsObj);
+      if (!keys.length) {
+        content.innerHTML = `
+          <div class="no-data">No query parameters found in the URL.<br/>
+          Example test link: <a href="?patientId=pat1002&hospitalId=cws25">?patientId=pat1002&hospitalId=cws25</a>
+          </div>
+        `;
+        return;
+      }
+
+      let html = `<table><thead><tr><th>Parameter</th><th>Value</th></tr></thead><tbody>`;
+      for (const k of keys) {
+        const v = paramsObj[k];
+        html += `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(v)}</td></tr>`;
+      }
+      html += `</tbody></table>`;
+
+      html += `<h3 style="margin-top:18px">Raw query</h3><pre>${escapeHtml(rawSearch)}</pre>`;
+
+      content.innerHTML = html;
+      controls.style.display = 'flex';
+
+      document.getElementById('copyJson').onclick = () => {
+        const json = JSON.stringify(paramsObj, null, 2);
+        navigator.clipboard.writeText(json).then(()=> {
+          alert('Copied JSON to clipboard');
+        }).catch(()=> alert('Failed to copy'));
+      };
+      document.getElementById('openRaw').onclick = () => {
+        window.open(window.location.href, '_blank');
+      };
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#39;');
+    }
+
+    // Parse query parameters into a simple object (single-value)
+    (function(){
+      const search = window.location.search || '';
+      const params = new URLSearchParams(search);
+      const obj = {};
+      for (const [k, v] of params.entries()) {
+        // if a key appears multiple times, this keeps last occurrence; adjust if you want array handling
+        obj[k] = v;
+      }
+      renderParams(obj, search || '(none)');
+    })();
+  </script>
+</body>
+</html>
